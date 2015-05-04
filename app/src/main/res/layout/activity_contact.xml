@@ -1,14 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/activity_contact_layout"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
-    android:orientation="vertical" >
+    android:orientation="vertical"
+    android:focusableInTouchMode="true">
 
     <AutoCompleteTextView
         android:id="@+id/auto_complete_text_view"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:hint="To...." >
+        android:hint="To..."
+        android:lines="1">
     </AutoCompleteTextView>
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/bt_bubble_them"
+        android:id="@+id/bt_bubble_them"
+        android:layout_gravity="center_horizontal"
+        android:onClick="onButtonClick"
+        android:nestedScrollingEnabled="false"
+        android:enabled="false" />
 
 </LinearLayout>

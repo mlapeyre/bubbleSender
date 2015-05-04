@@ -1,43 +1,50 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical" >
+    android:orientation="vertical"
+    android:weightSum="1">
 
     <TextView
         android:id="@+id/ccontName"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Contact name"
-        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:textAppearance="?android:attr/textAppearanceMedium"
         android:textColor="#A5000000"
-        android:layout_margin="6dp" />
+        android:layout_marginStart="5dp"
+        android:layout_alignParentTop="true"
+        android:layout_toEndOf="@+id/ccontImage" />
 
-    <LinearLayout
-        android:orientation="horizontal"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+    <ImageView
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:id="@+id/ccontImage"
+        android:layout_alignParentStart="true"
+        android:layout_margin="5dp"
+        android:contentDescription="Display the contact image" />
 
-        <TextView
-            android:id="@+id/ccontType"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentRight="true"
-            android:layout_marginRight="14dp"
-            android:text="Phone number"
-            android:textAppearance="?android:attr/textAppearanceMedium"
-            android:textColor="#A5000000"
-            android:layout_margin="6dp" />
+    <TextView
+        android:id="@+id/ccontType"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Phone number"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:textColor="#A5000000"
+        android:layout_alignBottom="@+id/ccontImage"
+        android:layout_alignStart="@+id/ccontName"
+        android:layout_marginBottom="5dp" />
 
-        <TextView
-            android:id="@+id/ccontNo"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentLeft="true"
-            android:text="Phone type"
-            android:textAppearance="?android:attr/textAppearanceMedium"
-            android:textColor="#A5000000"
-            android:layout_margin="6dp" />
+    <TextView
+        android:id="@+id/ccontNo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Phone type"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:textColor="#A5000000"
+        android:layout_marginStart="5dp"
+        android:layout_alignTop="@+id/ccontType"
+        android:layout_toEndOf="@+id/ccontType"
+        android:layout_marginBottom="5dp" />
 
-    </LinearLayout>
-</LinearLayout>
+</RelativeLayout>
