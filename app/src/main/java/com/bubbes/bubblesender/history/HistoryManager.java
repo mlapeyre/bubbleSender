@@ -2,6 +2,7 @@ package com.bubbes.bubblesender.history;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.util.Base64;
 
 import com.bubbes.bubblesender.PhoneEntry;
 import com.bubbes.bubblesender.utils.Assertion;
@@ -15,7 +16,6 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * History manager used for store the phone entries for the last NB_CONTACTS
@@ -54,11 +54,11 @@ public class HistoryManager {
     //==============================================================================================
     // Constructor
     //==============================================================================================
-    private HistoryManager(Context context) {
+    protected HistoryManager(Context context) {
         Assertion.assertIsNotMainThread();
         this.sharedPreferences = context.getSharedPreferences(SHARED_PREFERENCE_KEY, Context.MODE_PRIVATE);
         //Initialize the contact list
-        String serializedContacts = this.sharedPreferences.getString(SHARED_PREFERENCE_KEY, "");
+        String serializedContacts = this.sharedPreferences.getString(HISTORY_KEY, "");
         //No need for synchronisation here we are in the MUTEX block
         this.recentContacts = this.deserializeContacts(serializedContacts);
     }
@@ -120,8 +120,12 @@ public class HistoryManager {
 
     private boolean isFirst(PhoneEntry phoneEntry) {
         synchronized (recentContacts) {
-            PhoneEntry first = this.recentContacts.getFirst();
-            return first !=null && Objects.equals(first, phoneEntry);
+            if (this.recentContacts.isEmpty()){
+                return false;
+            }else{
+                PhoneEntry first = this.recentContacts.getFirst();
+                return first != null && Objects.equals(first, phoneEntry);
+            }
         }
     }
 
@@ -138,7 +142,8 @@ public class HistoryManager {
     //==============================================================================================
 
     private LinkedList<PhoneEntry> deserializeContacts(String serializedContacts) {
-        try (ByteArrayInputStream inputStream = new ByteArrayInputStream(serializedContacts.getBytes());
+        byte[] decode = Base64.decode(serializedContacts, Base64.DEFAULT);
+        try (ByteArrayInputStream inputStream = new ByteArrayInputStream(decode);
              ObjectInputStream objectInputStream = new ObjectInputStream(inputStream)) {
             return (LinkedList<PhoneEntry>) objectInputStream.readObject();
         } catch (IOException | ClassNotFoundException e) {
@@ -150,7 +155,16 @@ public class HistoryManager {
         try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
              ObjectOutputStream objectOutputStream = new ObjectOutputStream(byteArrayOutputStream)) {
             objectOutputStream.writeObject(contacts);
-            return byteArrayOutputStream.toString();
+            objectOutputStream.flush();
+            return new String(Base64.encode(byteArrayOutputStream.toByteArray(),Base64.DEFAULT));
+        }
+    }
+
+
+    public void clear() {
+        synchronized (this.recentContacts) {
+            this.recentContacts.clear();
+            this.sharedPreferences.edit().clear().apply();
         }
     }
 }

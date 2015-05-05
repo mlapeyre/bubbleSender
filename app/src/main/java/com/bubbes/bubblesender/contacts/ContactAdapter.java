@@ -149,6 +149,8 @@ public class ContactAdapter extends BaseAdapter implements Filterable {
                     this.displayedElements.add(entry);
                 }
             }
+        }else{
+            this.displayedElements.addAll(entries);
         }
         this.notifyDataSetChanged();
     }

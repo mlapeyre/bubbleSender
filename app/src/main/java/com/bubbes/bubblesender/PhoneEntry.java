@@ -53,4 +53,31 @@ public class PhoneEntry implements Serializable {
     public String toDisplay() {
         return this.name + " <" + this.phone + ">";
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        PhoneEntry that = (PhoneEntry) o;
+
+        if (!name.equals(that.name)) return false;
+        if (!phone.equals(that.phone)) return false;
+        if (!type.equals(that.type)) return false;
+
+        if (imageThumbUri != null ? !imageThumbUri.equals(that.imageThumbUri) : that.imageThumbUri != null)
+            return false;
+        return !(imageUri != null ? !imageUri.equals(that.imageUri) : that.imageUri != null);
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = name.hashCode();
+        result = 31 * result + phone.hashCode();
+        result = 31 * result + type.hashCode();
+        result = 31 * result + (imageThumbUri != null ? imageThumbUri.hashCode() : 0);
+        result = 31 * result + (imageUri != null ? imageUri.hashCode() : 0);
+        return result;
+    }
 }

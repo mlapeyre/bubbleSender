@@ -70,7 +70,7 @@ public class SendBubblesActivity extends Activity {
 
         PendingIntent sentMessagesReceiver = PendingIntent.getBroadcast(this, 0, new Intent("SMS_SENT"), 0);
         this.registerReceiver(this.sendMessageReceiver, new IntentFilter("SMS_SENT"));
-        this.executor = new BubbleExecutor(phoneEntry.getPhone(), sentMessagesReceiver);
+        this.executor = new BubbleExecutor(phoneEntry, sentMessagesReceiver,this);
         this.executor.start(SendSpeed.NORMAL);
     }
 

@@ -2,8 +2,12 @@ package com.bubbes.bubblesender.executor;
 
 
 import android.app.PendingIntent;
+import android.content.Context;
 import android.support.annotation.NonNull;
 import android.telephony.SmsManager;
+
+import com.bubbes.bubblesender.PhoneEntry;
+import com.bubbes.bubblesender.history.HistoryManager;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -20,13 +24,15 @@ public class BubbleExecutor {
     };
 
     private final ScheduledExecutorService executorService;
-    private final String phoneNumber;
+    private final PhoneEntry phoneEntry;
     private final PendingIntent sentMessagesReceiver;
+    private Context context;
 
-    public BubbleExecutor(String phoneNumber, PendingIntent sentMessagesReceiver) {
+    public BubbleExecutor(PhoneEntry phoneEntry, PendingIntent sentMessagesReceiver,Context context) {
         this.sentMessagesReceiver = sentMessagesReceiver;
+        this.context = context;
         this.executorService = Executors.newSingleThreadScheduledExecutor(FACTORY);
-        this.phoneNumber = phoneNumber;
+        this.phoneEntry = phoneEntry;
     }
 
     public void start(SendSpeed speedPolicy) {
@@ -41,7 +47,9 @@ public class BubbleExecutor {
         @Override
         public void run() {
                 SmsManager smsManager = SmsManager.getDefault();
-                smsManager.sendTextMessage(phoneNumber, null, " ", sentMessagesReceiver, null);
+                smsManager.sendTextMessage(phoneEntry.getPhone(), null, " ", sentMessagesReceiver, null);
+                final HistoryManager instance = HistoryManager.getInstance(context);
+                instance.notifySender(phoneEntry);
         }
     }
 }

@@ -14,13 +14,17 @@ import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.AutoCompleteTextView;
+import android.widget.ListView;
 
+import com.bubbes.bubblesender.PhoneEntry;
 import com.bubbes.bubblesender.R;
 import com.bubbes.bubblesender.SendBubblesActivity;
-import com.bubbes.bubblesender.PhoneEntry;
+import com.bubbes.bubblesender.history.HistoryManager;
 import com.bubbes.bubblesender.utils.Assertion;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 
 public class ContactActivity extends ActionBarActivity implements AdapterView.OnItemClickListener {
@@ -52,6 +56,36 @@ public class ContactActivity extends ActionBarActivity implements AdapterView.On
         //Load asynchronously the autocompletion list
         ContactAdapter adapter = this.initializeContactAdapter();
         this.initializeAutoCompletePhoneNumberView(adapter);
+        initializeLastVictimList();
+    }
+
+    private void initializeLastVictimList() {
+        final long start = System.currentTimeMillis();
+        System.out.println("########"+start);
+        ListView listView = (ListView) this.findViewById(R.id.victim_list);
+        final ContactAdapter contactAdapter = new ContactAdapter(this, R.layout.sample_custom_contact_view, new ArrayList<PhoneEntry>());
+        listView.setAdapter(contactAdapter);
+        AsyncTask<Object, Void, List<PhoneEntry>> asyncTask = new AsyncTask<Object, Void, List<PhoneEntry>>() {
+            @Override
+            protected void onPostExecute(List<PhoneEntry> phoneEntries) {
+                super.onPostExecute(phoneEntries);
+                System.out.println("#########A-S" + System.currentTimeMillis());
+                contactAdapter.addAll(phoneEntries);
+                System.out.println("#########A-E" + System.currentTimeMillis());
+            }
+
+            @Override
+            protected List<PhoneEntry> doInBackground(Object[] params) {
+                System.out.println("#########"+(System.currentTimeMillis()-start));
+                System.out.println("#########B-S"+System.currentTimeMillis());
+                final HistoryManager instance = HistoryManager.getInstance(ContactActivity.this);
+                List<PhoneEntry> recentContacts = instance.getRecentContacts();
+                System.out.println("#########B-E"+System.currentTimeMillis());
+                return recentContacts;
+            }
+        };
+        //Let's load the contact list asynchronously
+        asyncTask.execute();
     }
 
     //==============================================================================================
@@ -98,36 +132,42 @@ public class ContactActivity extends ActionBarActivity implements AdapterView.On
 
     private void initializeBackGroundContactLoading(final ContactAdapter adapter) {
         Assertion.assertIsMainThread();
-        AsyncTask<Object, Void, Void> asyncTask = new AsyncTask<Object, Void, Void>() {
+        AsyncTask<Object, Void, List<PhoneEntry>> asyncTask = new AsyncTask<Object, Void, List<PhoneEntry>>() {
             @Override
-            protected Void doInBackground(Object[] params) {
-                initializeAdapterContent(adapter);
-                return null;
+            protected List<PhoneEntry> doInBackground(Object[] params) {
+                long start = System.currentTimeMillis();
+                final ArrayList<PhoneEntry> result = new ArrayList<>();
+                String[] projection = {ContactsContract.Contacts._ID, ContactsContract.Contacts.DISPLAY_NAME, ContactsContract.Contacts.PHOTO_THUMBNAIL_URI,ContactsContract.Contacts.PHOTO_URI};
+                try (Cursor contactCursor = getContentResolver().query(ContactsContract.Contacts.CONTENT_URI, projection, null, null, null)) {
+                    while (contactCursor.moveToNext()) {
+                        final PhoneEntry[] phoneEntries = createPhoneEntriesForContact(contactCursor);
+                        if (phoneEntries.length>0) {
+                            Collections.addAll(result, phoneEntries);
+                        }
+                    }
+                }
+                System.out.println("=================");
+                System.out.println("ENDED in "+(System.currentTimeMillis()-start)+"ms");
+                return result;
+            }
+
+            @Override
+            protected void onPostExecute(List<PhoneEntry> phoneEntries) {
+                super.onPostExecute(phoneEntries);
+                adapter.addAll(phoneEntries);
             }
         };
+
         //Let's load the contact list asynchronously
         asyncTask.execute();
     }
 
     private void initializeAdapterContent(final ContactAdapter adapter) {
         Assertion.assertIsNotMainThread();
-        String[] projection = {ContactsContract.Contacts._ID, ContactsContract.Contacts.DISPLAY_NAME, ContactsContract.Contacts.PHOTO_THUMBNAIL_URI,ContactsContract.Contacts.PHOTO_URI};
-        try (Cursor contactCursor = getContentResolver().query(ContactsContract.Contacts.CONTENT_URI, projection, null, null, null)) {
-            while (contactCursor.moveToNext()) {
-                final ArrayList<PhoneEntry> phoneEntries = createPhoneEntriesForContact(contactCursor);
-                if (!phoneEntries.isEmpty()) {
-                    this.runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            adapter.addAll(phoneEntries);
-                        }
-                    });
-                }
-            }
-        }
+
     }
 
-    private ArrayList<PhoneEntry> createPhoneEntriesForContact(Cursor contactCursor) {
+    private PhoneEntry[] createPhoneEntriesForContact(Cursor contactCursor) {
         Assertion.assertIsNotMainThread();
         ArrayList<PhoneEntry> phoneEntries = new ArrayList<>();
         String contactName = contactCursor.getString(contactCursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME));
@@ -145,7 +185,7 @@ public class ContactActivity extends ActionBarActivity implements AdapterView.On
                 phoneEntries.add(object);
             }
         }
-        return phoneEntries;
+        return phoneEntries.toArray(new PhoneEntry[phoneEntries.size()]);
     }
 
     //==============================================================================================
