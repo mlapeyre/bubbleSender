@@ -19,11 +19,11 @@ import android.widget.ListView;
 import com.bubbes.bubblesender.PhoneEntry;
 import com.bubbes.bubblesender.R;
 import com.bubbes.bubblesender.SendBubblesActivity;
+import com.bubbes.bubblesender.TimedPhoneEntry;
 import com.bubbes.bubblesender.history.HistoryManager;
 import com.bubbes.bubblesender.utils.Assertion;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 
@@ -54,44 +54,49 @@ public class ContactActivity extends ActionBarActivity implements AdapterView.On
         Assertion.initializeStrictMode();
         this.setContentView(R.layout.activity_contact);
         //Load asynchronously the autocompletion list
-        ContactAdapter adapter = this.initializeContactAdapter();
+        PhoneEntryAdapter adapter = this.initializeContactAdapter();
         this.initializeAutoCompletePhoneNumberView(adapter);
-        initializeLastVictimList();
+        this.initializeLastVictimList();
     }
 
     private void initializeLastVictimList() {
-        final long start = System.currentTimeMillis();
-        System.out.println("########"+start);
         ListView listView = (ListView) this.findViewById(R.id.victim_list);
-        final ContactAdapter contactAdapter = new ContactAdapter(this, R.layout.sample_custom_contact_view, new ArrayList<PhoneEntry>());
-        listView.setAdapter(contactAdapter);
-        AsyncTask<Object, Void, List<PhoneEntry>> asyncTask = new AsyncTask<Object, Void, List<PhoneEntry>>() {
+        final TimedPhoneEntryAdapter phoneEntryAdapter = new TimedPhoneEntryAdapter(this, R.layout.timed_phone_entry_view, new ArrayList<TimedPhoneEntry>());
+        listView.setAdapter(phoneEntryAdapter);
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
-            protected void onPostExecute(List<PhoneEntry> phoneEntries) {
+            public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
+                PhoneEntry phoneEntry = (PhoneEntry) adapterView.getItemAtPosition(position);
+                goToSendBubbleActivity(phoneEntry);
+            }
+        });
+        AsyncTask<Object, Void, List<TimedPhoneEntry>> asyncTask = new AsyncTask<Object, Void, List<TimedPhoneEntry>>() {
+            @Override
+            protected void onPostExecute(List<TimedPhoneEntry> phoneEntries) {
                 super.onPostExecute(phoneEntries);
-                System.out.println("#########A-S" + System.currentTimeMillis());
-                contactAdapter.addAll(phoneEntries);
-                System.out.println("#########A-E" + System.currentTimeMillis());
+                findViewById(R.id.loading_recents_progressbar).setVisibility(View.GONE);
+                if (phoneEntries.isEmpty()) {
+                    findViewById(R.id.no_recent_contact_found).setVisibility(View.VISIBLE);
+                } else {
+                    phoneEntryAdapter.addAll(phoneEntries);
+                }
             }
 
             @Override
-            protected List<PhoneEntry> doInBackground(Object[] params) {
-                System.out.println("#########"+(System.currentTimeMillis()-start));
-                System.out.println("#########B-S"+System.currentTimeMillis());
+            protected List<TimedPhoneEntry> doInBackground(Object[] params) {
                 final HistoryManager instance = HistoryManager.getInstance(ContactActivity.this);
-                List<PhoneEntry> recentContacts = instance.getRecentContacts();
-                System.out.println("#########B-E"+System.currentTimeMillis());
-                return recentContacts;
+                return instance.getRecentContacts();
             }
         };
         //Let's load the contact list asynchronously
         asyncTask.execute();
     }
 
+
     //==============================================================================================
     // Components initialization
     //==============================================================================================
-    private void initializeAutoCompletePhoneNumberView(ContactAdapter mAdapter) {
+    private void initializeAutoCompletePhoneNumberView(PhoneEntryAdapter mAdapter) {
         this.autoCompletePhoneNumberView = (AutoCompleteTextView) findViewById(R.id.auto_complete_text_view);
         this.autoCompletePhoneNumberView.setAdapter(mAdapter);
         this.autoCompletePhoneNumberView.setOnItemClickListener(this);
@@ -122,33 +127,20 @@ public class ContactActivity extends ActionBarActivity implements AdapterView.On
         });
     }
 
-    private ContactAdapter initializeContactAdapter() {
+    private PhoneEntryAdapter initializeContactAdapter() {
         Assertion.assertIsMainThread();
         ArrayList<PhoneEntry> contactList = new ArrayList<>();
-        ContactAdapter adapter = new ContactAdapter(this,R.layout.sample_custom_contact_view,contactList);
+        PhoneEntryAdapter adapter = new PhoneEntryAdapter(this, R.layout.phone_entry_view, contactList);
         initializeBackGroundContactLoading(adapter);
         return adapter;
     }
 
-    private void initializeBackGroundContactLoading(final ContactAdapter adapter) {
+    private void initializeBackGroundContactLoading(final PhoneEntryAdapter adapter) {
         Assertion.assertIsMainThread();
         AsyncTask<Object, Void, List<PhoneEntry>> asyncTask = new AsyncTask<Object, Void, List<PhoneEntry>>() {
             @Override
             protected List<PhoneEntry> doInBackground(Object[] params) {
-                long start = System.currentTimeMillis();
-                final ArrayList<PhoneEntry> result = new ArrayList<>();
-                String[] projection = {ContactsContract.Contacts._ID, ContactsContract.Contacts.DISPLAY_NAME, ContactsContract.Contacts.PHOTO_THUMBNAIL_URI,ContactsContract.Contacts.PHOTO_URI};
-                try (Cursor contactCursor = getContentResolver().query(ContactsContract.Contacts.CONTENT_URI, projection, null, null, null)) {
-                    while (contactCursor.moveToNext()) {
-                        final PhoneEntry[] phoneEntries = createPhoneEntriesForContact(contactCursor);
-                        if (phoneEntries.length>0) {
-                            Collections.addAll(result, phoneEntries);
-                        }
-                    }
-                }
-                System.out.println("=================");
-                System.out.println("ENDED in "+(System.currentTimeMillis()-start)+"ms");
-                return result;
+                return retrievePhoneEntryList();
             }
 
             @Override
@@ -157,35 +149,42 @@ public class ContactActivity extends ActionBarActivity implements AdapterView.On
                 adapter.addAll(phoneEntries);
             }
         };
-
         //Let's load the contact list asynchronously
         asyncTask.execute();
     }
 
-    private void initializeAdapterContent(final ContactAdapter adapter) {
-        Assertion.assertIsNotMainThread();
 
-    }
-
-    private PhoneEntry[] createPhoneEntriesForContact(Cursor contactCursor) {
+    private List<PhoneEntry> retrievePhoneEntryList() {
         Assertion.assertIsNotMainThread();
         ArrayList<PhoneEntry> phoneEntries = new ArrayList<>();
-        String contactName = contactCursor.getString(contactCursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME));
-        int contactId = contactCursor.getInt(contactCursor.getColumnIndex(ContactsContract.Contacts._ID));
-        String imageThumbnailURI = contactCursor.getString(contactCursor.getColumnIndex(ContactsContract.Contacts.PHOTO_THUMBNAIL_URI));
-        String imageUri = contactCursor.getString(contactCursor.getColumnIndex(ContactsContract.Contacts.PHOTO_URI));
+        String[] projection = {
+                ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
+                ContactsContract.CommonDataKinds.Phone.PHOTO_THUMBNAIL_URI,
+                ContactsContract.CommonDataKinds.Phone.PHOTO_URI,
+                ContactsContract.CommonDataKinds.Phone.NUMBER,
+                ContactsContract.CommonDataKinds.Phone.TYPE
+        };
         try (Cursor phones = getContentResolver().query(
-                ContactsContract.CommonDataKinds.Phone.CONTENT_URI, new String[]{ContactsContract.CommonDataKinds.Phone.NUMBER, ContactsContract.CommonDataKinds.Phone.TYPE},
-                ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = ?", new String[]{String.valueOf(contactId)}, null)) {
+                ContactsContract.CommonDataKinds.Phone.CONTENT_URI, projection, null, null, null)) {
+            //Retrieve column index once
+            int displayNameIndex = phones.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME);
+            int thumbnailIndex = phones.getColumnIndex(ContactsContract.Contacts.PHOTO_THUMBNAIL_URI);
+            int photoIndex = phones.getColumnIndex(ContactsContract.Contacts.PHOTO_URI);
+            int phoneIndex = phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER);
+            int typeIndex = phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.TYPE);
+            //lets iterate now !!!
             while (phones.moveToNext()) {
-                String phoneNumber = phones.getString(phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
-                int numberType = phones.getInt(phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.TYPE));
-                CharSequence phoneType = this.getApplicationContext().getResources().getText(ContactsContract.CommonDataKinds.Phone.getTypeLabelResource(numberType));
-                PhoneEntry object = new PhoneEntry(contactName, phoneNumber, phoneType.toString(), imageThumbnailURI, imageUri);
-                phoneEntries.add(object);
+                CharSequence phoneType = this.getApplicationContext().getResources().
+                        getText(ContactsContract.CommonDataKinds.Phone.getTypeLabelResource(phones.getInt(typeIndex)));
+                phoneEntries.add(new PhoneEntry(
+                        phones.getString(displayNameIndex),
+                        phones.getString(phoneIndex),
+                        phoneType.toString(),
+                        phones.getString(thumbnailIndex),
+                        phones.getString(photoIndex)));
             }
         }
-        return phoneEntries.toArray(new PhoneEntry[phoneEntries.size()]);
+        return phoneEntries;
     }
 
     //==============================================================================================
@@ -199,9 +198,7 @@ public class ContactActivity extends ActionBarActivity implements AdapterView.On
 
     public void onButtonClick(View view) {
         assert this.selectedPhoneEntry != null;
-        Intent intent = new Intent(this, SendBubblesActivity.class);
-        intent.putExtra(SendBubblesActivity.EXTRA_PHONE_ENTRY, this.selectedPhoneEntry);
-        this.startActivity(intent);
+        this.goToSendBubbleActivity(this.selectedPhoneEntry);
     }
 
     boolean isAContactSelected() {
@@ -228,6 +225,18 @@ public class ContactActivity extends ActionBarActivity implements AdapterView.On
         viewById.setEnabled(enabled);
     }
 
+    private void goToSendBubbleActivity(PhoneEntry phoneEntry) {
+        assert phoneEntry != null;
+        Intent intent = new Intent(this, SendBubblesActivity.class);
+        intent.putExtra(SendBubblesActivity.EXTRA_PHONE_ENTRY, phoneEntry);
+        this.startActivity(intent);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        initializeLastVictimList();
+    }
 
     //==============================================================================================
     // Save/Restore states
@@ -243,7 +252,7 @@ public class ContactActivity extends ActionBarActivity implements AdapterView.On
         super.onRestoreInstanceState(savedInstanceState);
         this.selectedPhoneEntry = (PhoneEntry) savedInstanceState.getSerializable(STATE_SELECTED_PHONE_ENTRY);
         boolean aContactSelected = isAContactSelected();
-        if(aContactSelected){
+        if (aContactSelected) {
             this.autoCompletePhoneNumberView.setText(this.selectedPhoneEntry.toDisplay());
         }
         this.changeButtonStatus(aContactSelected);

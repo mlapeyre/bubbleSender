@@ -7,6 +7,7 @@ import android.support.annotation.NonNull;
 import android.telephony.SmsManager;
 
 import com.bubbes.bubblesender.PhoneEntry;
+import com.bubbes.bubblesender.TimedPhoneEntry;
 import com.bubbes.bubblesender.history.HistoryManager;
 
 import java.util.concurrent.Executors;
@@ -47,9 +48,9 @@ public class BubbleExecutor {
         @Override
         public void run() {
                 SmsManager smsManager = SmsManager.getDefault();
-                smsManager.sendTextMessage(phoneEntry.getPhone(), null, " ", sentMessagesReceiver, null);
+//                smsManager.sendTextMessage(phoneEntry.getPhone(), null, " ", sentMessagesReceiver, null);
                 final HistoryManager instance = HistoryManager.getInstance(context);
-                instance.notifySender(phoneEntry);
+                instance.notifySender(new TimedPhoneEntry(phoneEntry,System.currentTimeMillis()));
         }
     }
 }

@@ -4,7 +4,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.util.Base64;
 
-import com.bubbes.bubblesender.PhoneEntry;
+import com.bubbes.bubblesender.TimedPhoneEntry;
 import com.bubbes.bubblesender.utils.Assertion;
 
 import java.io.ByteArrayInputStream;
@@ -15,7 +15,6 @@ import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Objects;
 
 /**
  * History manager used for store the phone entries for the last NB_CONTACTS
@@ -49,7 +48,7 @@ public class HistoryManager {
     // Attributes
     //==============================================================================================
     private SharedPreferences sharedPreferences;
-    private final LinkedList<PhoneEntry> recentContacts;
+    private final LinkedList<TimedPhoneEntry> recentContacts;
 
     //==============================================================================================
     // Constructor
@@ -70,7 +69,7 @@ public class HistoryManager {
     /**
      * Basic singleton pattern
      *
-     * @param context The context to use for retreivong shared preferences
+     * @param context The context to use for retrieving shared preferences
      * @return A HistoryManager instance
      */
     public static HistoryManager getInstance(Context context) {
@@ -84,18 +83,10 @@ public class HistoryManager {
 
     }
 
-    /**
-     * Notify that the contact has sent bubbles
-     * @param phoneEntry
-     * @return
-     */
-    public boolean notifySender(PhoneEntry phoneEntry) {
+
+    public boolean notifySender(TimedPhoneEntry phoneEntry) {
         Assertion.assertIsNotMainThread();
         synchronized (recentContacts) {
-            if (isFirst(phoneEntry)) {
-                //This entry is already the first lets return
-                return true;
-            }else{
                 if(recentContacts.contains(phoneEntry)){
                     recentContacts.remove(phoneEntry);
                 }
@@ -112,24 +103,11 @@ public class HistoryManager {
                 } catch (IOException e) {
                     //ignore me
                     return false;
-                }
-            }
-        }
-
-    }
-
-    private boolean isFirst(PhoneEntry phoneEntry) {
-        synchronized (recentContacts) {
-            if (this.recentContacts.isEmpty()){
-                return false;
-            }else{
-                PhoneEntry first = this.recentContacts.getFirst();
-                return first != null && Objects.equals(first, phoneEntry);
             }
         }
     }
 
-    public List<PhoneEntry> getRecentContacts() {
+    public List<TimedPhoneEntry> getRecentContacts() {
         Assertion.assertIsNotMainThread();
         synchronized (recentContacts) {
             return new ArrayList<>(this.recentContacts);
@@ -141,17 +119,17 @@ public class HistoryManager {
     // Private
     //==============================================================================================
 
-    private LinkedList<PhoneEntry> deserializeContacts(String serializedContacts) {
+    private LinkedList<TimedPhoneEntry> deserializeContacts(String serializedContacts) {
         byte[] decode = Base64.decode(serializedContacts, Base64.DEFAULT);
         try (ByteArrayInputStream inputStream = new ByteArrayInputStream(decode);
              ObjectInputStream objectInputStream = new ObjectInputStream(inputStream)) {
-            return (LinkedList<PhoneEntry>) objectInputStream.readObject();
+            return (LinkedList<TimedPhoneEntry>) objectInputStream.readObject();
         } catch (IOException | ClassNotFoundException e) {
             return new LinkedList<>();
         }
     }
 
-    private String serializeContacts(LinkedList<PhoneEntry> contacts) throws IOException {
+    private String serializeContacts(LinkedList<TimedPhoneEntry> contacts) throws IOException {
         try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
              ObjectOutputStream objectOutputStream = new ObjectOutputStream(byteArrayOutputStream)) {
             objectOutputStream.writeObject(contacts);

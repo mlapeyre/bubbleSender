@@ -20,7 +20,7 @@ import com.squareup.picasso.Picasso;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ContactAdapter extends BaseAdapter implements Filterable {
+public class PhoneEntryAdapter<T extends PhoneEntry> extends BaseAdapter implements Filterable {
 
     //==============================================================================================
     // Constructor
@@ -32,7 +32,7 @@ public class ContactAdapter extends BaseAdapter implements Filterable {
     /**
      * The elements which are currently displayed
      */
-    private List<PhoneEntry> displayedElements;
+    private List<T> displayedElements;
     /**
      * The layout id used for the items of the view
      */
@@ -40,7 +40,7 @@ public class ContactAdapter extends BaseAdapter implements Filterable {
     /**
      * The complete list of the phone entries
      */
-    private final ArrayList<PhoneEntry> completePhoneList;
+    private final ArrayList<T> completePhoneList;
     /**
      * The filter which may be used on this adapter
      */
@@ -66,7 +66,7 @@ public class ContactAdapter extends BaseAdapter implements Filterable {
      * @param rowLayoutId  The layout id to use for creating item view
      * @param phoneEntries The initial phone entry list
      */
-    public ContactAdapter(Activity activity, int rowLayoutId, ArrayList<PhoneEntry> phoneEntries) {
+    public PhoneEntryAdapter(Activity activity, int rowLayoutId, ArrayList<T> phoneEntries) {
         this.activity = activity;
         this.rowLayout = rowLayoutId;
         this.completePhoneList = phoneEntries;
@@ -83,7 +83,7 @@ public class ContactAdapter extends BaseAdapter implements Filterable {
     }
 
     @Override
-    public PhoneEntry getItem(int position) {
+    public T getItem(int position) {
         Assertion.assertIsMainThread();
         return this.displayedElements.get(position);
     }
@@ -103,7 +103,7 @@ public class ContactAdapter extends BaseAdapter implements Filterable {
             view = inflater.inflate(rowLayout, null);
         }
 
-        PhoneEntry phoneEntry = this.getItem(position);
+        T phoneEntry = this.getItem(position);
 
         TextView contactName = ViewHolder.get(view, R.id.ccontName);
         ImageView image = ViewHolder.get(view, R.id.ccontImage);
@@ -138,13 +138,13 @@ public class ContactAdapter extends BaseAdapter implements Filterable {
      *
      * @param entries The phone entries to add to the adapter
      */
-    public void addAll(List<PhoneEntry> entries) {
+    public void addAll(List<T> entries) {
         Assertion.assertIsMainThread();
         synchronized (COMPLETE_PHONE_LIST_MUTEX) {
             this.completePhoneList.addAll(entries);
         }
         if (!isEmptyFilter(this.currentFilter)) {
-            for (PhoneEntry entry : entries) {
+            for (T entry : entries) {
                 if (accept(entry, this.currentFilter)) {
                     this.displayedElements.add(entry);
                 }
@@ -162,16 +162,16 @@ public class ContactAdapter extends BaseAdapter implements Filterable {
         @Override
         protected FilterResults performFiltering(CharSequence constraint) {
             if (isEmptyFilter(constraint)) {
-                ArrayList<PhoneEntry> phoneEntries;
+                ArrayList<T> phoneEntries;
                 synchronized (COMPLETE_PHONE_LIST_MUTEX) {
                     phoneEntries = new ArrayList<>(completePhoneList);
                 }
                 return createFilterResult(phoneEntries);
             } else {
                 String toLowerCase = constraint.toString().toLowerCase();
-                ArrayList<PhoneEntry> phoneEntries = new ArrayList<>();
+                ArrayList<T> phoneEntries = new ArrayList<>();
                 synchronized (COMPLETE_PHONE_LIST_MUTEX) {
-                    for (PhoneEntry phoneEntry : completePhoneList) {
+                    for (T phoneEntry : completePhoneList) {
                         if (accept(phoneEntry, toLowerCase)) {
                             phoneEntries.add(phoneEntry);
                         }
@@ -181,7 +181,7 @@ public class ContactAdapter extends BaseAdapter implements Filterable {
             }
         }
 
-        private FilterResults createFilterResult(ArrayList<PhoneEntry> phoneEntries) {
+        private FilterResults createFilterResult(ArrayList<T> phoneEntries) {
             FilterResults filterResults = new FilterResults();
             filterResults.values = phoneEntries;
             filterResults.count = phoneEntries.size();
@@ -191,12 +191,12 @@ public class ContactAdapter extends BaseAdapter implements Filterable {
         @Override
         protected void publishResults(CharSequence constraint, FilterResults results) {
             currentFilter = (constraint==null)?null:constraint.toString().toLowerCase();
-            displayedElements = (List<PhoneEntry>) results.values;
+            displayedElements = (List<T>) results.values;
             notifyDataSetChanged();
         }
     }
 
-    private boolean accept(PhoneEntry phoneEntry, CharSequence constraint) {
+    private boolean accept(T phoneEntry, CharSequence constraint) {
         return phoneEntry.getName().toLowerCase().contains(constraint);
     }
 

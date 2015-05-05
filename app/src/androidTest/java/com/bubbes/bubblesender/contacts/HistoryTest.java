@@ -3,7 +3,7 @@ package com.bubbes.bubblesender.contacts;
 import android.content.Context;
 import android.test.ActivityInstrumentationTestCase2;
 
-import com.bubbes.bubblesender.PhoneEntry;
+import com.bubbes.bubblesender.TimedPhoneEntry;
 import com.bubbes.bubblesender.history.HistoryManager;
 
 import java.util.List;
@@ -17,12 +17,12 @@ public class HistoryTest extends ActivityInstrumentationTestCase2<ContactActivit
     //==============================================================================================
 
     private HistoryManager historyManager;
-    private PhoneEntry phoneEntry1;
-    private PhoneEntry phoneEntry2;
-    private PhoneEntry phoneEntry3;
-    private PhoneEntry phoneEntry4;
-    private PhoneEntry phoneEntry5;
-    private PhoneEntry phoneEntry6;
+    private TimedPhoneEntry phoneEntry1;
+    private TimedPhoneEntry phoneEntry2;
+    private TimedPhoneEntry phoneEntry3;
+    private TimedPhoneEntry phoneEntry4;
+    private TimedPhoneEntry phoneEntry5;
+    private TimedPhoneEntry phoneEntry6;
 
     //==============================================================================================
     // Constructor
@@ -39,12 +39,12 @@ public class HistoryTest extends ActivityInstrumentationTestCase2<ContactActivit
     protected void setUp() throws Exception {
         super.setUp();
         this.historyManager = new FakeHistoryManager(getActivity());
-        this.phoneEntry1 = new PhoneEntry("name", "phone", "type", "uri1", null);
-        this.phoneEntry2 = new PhoneEntry("name2", "phone2", "type2", null, null);
-        this.phoneEntry3 = new PhoneEntry("name3", "phone2", "type2", null, null);
-        this.phoneEntry4 = new PhoneEntry("name4", "phone2", "type2", null, null);
-        this.phoneEntry5 = new PhoneEntry("name5", "phone2", "type2", null, null);
-        this.phoneEntry6 = new PhoneEntry("name6", "phone2", "type2", null, null);
+        this.phoneEntry1 = new TimedPhoneEntry("name", "phone", "type", "uri1", null,12);
+        this.phoneEntry2 = new TimedPhoneEntry("name2", "phone2", "type2", null, null,13);
+        this.phoneEntry3 = new TimedPhoneEntry("name3", "phone2", "type2", null, null,15);
+        this.phoneEntry4 = new TimedPhoneEntry("name4", "phone2", "type2", null, null,16);
+        this.phoneEntry5 = new TimedPhoneEntry("name5", "phone2", "type2", null, null,17);
+        this.phoneEntry6 = new TimedPhoneEntry("name6", "phone2", "type2", null, null,18);
     }
 
     @Override
@@ -68,13 +68,13 @@ public class HistoryTest extends ActivityInstrumentationTestCase2<ContactActivit
 
     public void testaddTwoPhoneEntries() {
         addPhoneEntries(this.phoneEntry1, this.phoneEntry2);
-        List<PhoneEntry> recentContacts = this.historyManager.getRecentContacts();
+        List<TimedPhoneEntry> recentContacts = this.historyManager.getRecentContacts();
         assertThat(recentContacts).containsExactly(this.phoneEntry2, this.phoneEntry1);
     }
 
     public void testAddTwoEntriesAndReReadItFromDisk() throws InterruptedException {
         addPhoneEntries(this.phoneEntry1, this.phoneEntry2);
-        List<PhoneEntry> recentContacts = new FakeHistoryManager(getActivity()).getRecentContacts();
+        List<TimedPhoneEntry> recentContacts = new FakeHistoryManager(getActivity()).getRecentContacts();
         assertThat(recentContacts).containsExactly(this.phoneEntry2, this.phoneEntry1);
     }
 
@@ -100,8 +100,8 @@ public class HistoryTest extends ActivityInstrumentationTestCase2<ContactActivit
     //==============================================================================================
     // Private methods / inner classes
     //==============================================================================================
-    private void addPhoneEntries(PhoneEntry... phoneEntry) {
-        for (PhoneEntry entry : phoneEntry) {
+    private void addPhoneEntries(TimedPhoneEntry... phoneEntry) {
+        for (TimedPhoneEntry entry : phoneEntry) {
             this.historyManager.notifySender(entry);
         }
     }
