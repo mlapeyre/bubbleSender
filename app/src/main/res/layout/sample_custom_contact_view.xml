@@ -9,7 +9,7 @@
         android:id="@+id/ccontName"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Contact name"
+        android:text="@string/placeholder"
         android:textAppearance="?android:attr/textAppearanceMedium"
         android:textColor="#A5000000"
         android:layout_marginStart="5dp"
@@ -22,13 +22,13 @@
         android:id="@+id/ccontImage"
         android:layout_alignParentStart="true"
         android:layout_margin="5dp"
-        android:contentDescription="Display the contact image" />
+        android:contentDescription="@string/contact_image_content_description" />
 
     <TextView
         android:id="@+id/ccontType"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Phone number"
+        android:text="@string/placeholder"
         android:textAppearance="?android:attr/textAppearanceSmall"
         android:textColor="#A5000000"
         android:layout_alignBottom="@+id/ccontImage"
@@ -39,7 +39,7 @@
         android:id="@+id/ccontNo"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Phone type"
+        android:text="@string/placeholder"
         android:textAppearance="?android:attr/textAppearanceSmall"
         android:textColor="#A5000000"
         android:layout_marginStart="5dp"

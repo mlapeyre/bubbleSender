@@ -1,4 +1,4 @@
-package com.bubbes.bubblesender;
+package com.bubbes.bubblesender.contacts;
 
 import android.test.ActivityInstrumentationTestCase2;
 import android.test.UiThreadTest;
@@ -6,7 +6,8 @@ import android.view.KeyEvent;
 import android.view.View;
 import android.widget.AutoCompleteTextView;
 
-import com.bubbes.bubblesender.contacts.PhoneEntry;
+import com.bubbes.bubblesender.PhoneEntry;
+import com.bubbes.bubblesender.R;
 
 
 public class ActivityContactTest extends ActivityInstrumentationTestCase2<ContactActivity> {
@@ -31,21 +32,21 @@ public class ActivityContactTest extends ActivityInstrumentationTestCase2<Contac
 
     @UiThreadTest
     public void testBubbleButtonIsEnabledAfterSelectingAnItem(){
-        this.contactActivity.setSelectedContact(new PhoneEntry("martin", "0553670000", "Mobile", imageURI));
+        this.contactActivity.setSelectedContact(new PhoneEntry("martin", "0553670000", "Mobile", "uri1","uri2"));
         View viewById = this.contactActivity.findViewById(R.id.bt_bubble_them);
         assertTrue(viewById.isEnabled());
     }
 
     @UiThreadTest
     public void testTextFieldIsCorrectlyFiledAfterSelectingAnItem(){
-        this.contactActivity.setSelectedContact(new PhoneEntry("martin", "0553670000", "Mobile", imageURI));
+        this.contactActivity.setSelectedContact(new PhoneEntry("martin", "0553670000", "Mobile", "uri1","uri2"));
         AutoCompleteTextView textView = (AutoCompleteTextView) this.contactActivity.findViewById(R.id.auto_complete_text_view);
         assertEquals("martin <0553670000>", textView.getText().toString());
     }
 
     @UiThreadTest
     public void testisAContactSelectedIsTrueAfterSelectedAnItem(){
-        this.contactActivity.setSelectedContact(new PhoneEntry("martin", "0553670000", "Mobile", imageURI));
+        this.contactActivity.setSelectedContact(new PhoneEntry("martin", "0553670000", "Mobile", "uri1","uri2"));
         assertTrue(this.getActivity().isAContactSelected());
     }
 
@@ -56,7 +57,7 @@ public class ActivityContactTest extends ActivityInstrumentationTestCase2<Contac
         this.runTestOnUiThread(new Runnable() {
             @Override
             public void run() {
-                contactActivity.setSelectedContact(new PhoneEntry("martin", "0553670000", "Mobile", imageURI));
+                contactActivity.setSelectedContact(new PhoneEntry("martin", "0553670000", "Mobile","uri1","uri2" ));
             }
         });
         assertTrue(textView.requestFocus());

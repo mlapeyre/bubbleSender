@@ -2,9 +2,8 @@ package com.bubbes.bubblesender.executor;
 
 
 import android.app.PendingIntent;
+import android.support.annotation.NonNull;
 import android.telephony.SmsManager;
-
-import com.bubbes.bubblesender.SendSpeed;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -15,7 +14,7 @@ public class BubbleExecutor {
 
     private final static ThreadFactory FACTORY = new ThreadFactory() {
         @Override
-        public Thread newThread(Runnable r) {
+        public Thread newThread(@NonNull Runnable r) {
             return new Thread(r, "Bubble-sending-thread");
         }
     };

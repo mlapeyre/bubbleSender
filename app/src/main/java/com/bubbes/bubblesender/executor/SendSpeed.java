@@ -1,4 +1,4 @@
-package com.bubbes.bubblesender;
+package com.bubbes.bubblesender.executor;
 
 public enum SendSpeed {
     NORMAL(5000);

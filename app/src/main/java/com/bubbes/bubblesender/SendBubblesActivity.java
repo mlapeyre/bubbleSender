@@ -7,20 +7,26 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.graphics.PorterDuff;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.support.annotation.NonNull;
+import android.view.View;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.bubbes.bubblesender.executor.BubbleExecutor;
+import com.bubbes.bubblesender.executor.SendSpeed;
+import com.squareup.picasso.Picasso;
 
 public class SendBubblesActivity extends Activity {
     //==============================================================================================
     // Constants
     //==============================================================================================
-    public static final String EXTRA_CONTACT_NUMBER = "PhoneNumberKey";
-    public static final String STATE_NB_MESSAGE_SENT = "nbMessageSent";
+    public static final String EXTRA_PHONE_ENTRY = "PHONE_ENTRY";
+
+    private static final String STATE_NB_MESSAGE_SENT = "nbMessageSent";
 
     //==============================================================================================
     // Attributes
@@ -52,11 +58,19 @@ public class SendBubblesActivity extends Activity {
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.send_bubble_activity);
-        String phoneNumber = this.getIntent().getStringExtra(EXTRA_CONTACT_NUMBER);
+        findViewById(R.id.bt_stop_bubbles).getBackground().
+                setColorFilter(0xFFFF0000, PorterDuff.Mode.MULTIPLY);
+
+        PhoneEntry phoneEntry = (PhoneEntry) this.getIntent().getSerializableExtra(EXTRA_PHONE_ENTRY);
+        ((TextView) findViewById(R.id.contact_name)).setText(phoneEntry.getName());
+        ((TextView) findViewById(R.id.contact_phone_number)).setText(phoneEntry.getPhone());
+        ((TextView) findViewById(R.id.contact_phone_type)).setText(phoneEntry.getType());
+        ImageView imageView = (ImageView) findViewById(R.id.contact_image);
+        Picasso.with(this).load(phoneEntry.getImageUri()).placeholder(R.drawable.ic_contact_picture).into(imageView);
 
         PendingIntent sentMessagesReceiver = PendingIntent.getBroadcast(this, 0, new Intent("SMS_SENT"), 0);
-        this.registerReceiver(sendMessageReceiver, new IntentFilter("SMS_SENT"));
-        this.executor = new BubbleExecutor(phoneNumber, sentMessagesReceiver);
+        this.registerReceiver(this.sendMessageReceiver, new IntentFilter("SMS_SENT"));
+        this.executor = new BubbleExecutor(phoneEntry.getPhone(), sentMessagesReceiver);
         this.executor.start(SendSpeed.NORMAL);
     }
 
@@ -76,8 +90,7 @@ public class SendBubblesActivity extends Activity {
             handler.post(new Runnable() {
                 @Override
                 public void run() {
-                    TextView viewById = (TextView) findViewById(R.id.nb_message_sent);
-                    viewById.setText(String.valueOf(++nbMessageSent));
+                    updateMessageCount(nbMessageSent + 1);
                 }
             });
         }
@@ -96,18 +109,21 @@ public class SendBubblesActivity extends Activity {
     protected void onRestoreInstanceState(@NonNull Bundle savedInstanceState) {
         super.onRestoreInstanceState(savedInstanceState);
         int nbMessageSent = savedInstanceState.getInt(STATE_NB_MESSAGE_SENT);
-        this.setSendMessageCount(nbMessageSent);
+        this.updateMessageCount(nbMessageSent);
+    }
+
+    public void stopBubbleHandler(View view) {
+        this.finish();
     }
 
     //==============================================================================================
     // Private
     //==============================================================================================
-    private void setSendMessageCount(int newCount) {
+    private void updateMessageCount(int newCount) {
         this.nbMessageSent = newCount;
-        TextView viewById = (TextView) findViewById(R.id.nb_message_sent);
-        viewById.setText(nbMessageSent);
+        TextView viewById = (TextView) findViewById(R.id.nb_bubbles_sent);
+        viewById.setText(this.nbMessageSent+" messages sent");
     }
-
 
 
 }

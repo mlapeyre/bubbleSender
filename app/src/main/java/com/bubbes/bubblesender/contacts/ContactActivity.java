@@ -1,4 +1,4 @@
-package com.bubbes.bubblesender;
+package com.bubbes.bubblesender.contacts;
 
 import android.content.Context;
 import android.content.Intent;
@@ -15,8 +15,9 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.AutoCompleteTextView;
 
-import com.bubbes.bubblesender.contacts.ContactAdapter;
-import com.bubbes.bubblesender.contacts.PhoneEntry;
+import com.bubbes.bubblesender.R;
+import com.bubbes.bubblesender.SendBubblesActivity;
+import com.bubbes.bubblesender.PhoneEntry;
 import com.bubbes.bubblesender.utils.Assertion;
 
 import java.util.ArrayList;
@@ -26,8 +27,7 @@ public class ContactActivity extends ActionBarActivity implements AdapterView.On
     //==============================================================================================
     // Constants used for state save/restore
     //==============================================================================================
-    public static final String STATE_SELECTED_PHONE_NUMBER = "selectedPhoneNumber";
-    public static final String STATE_DISPLAYED_TEXT = "displayedText";
+    private static final String STATE_SELECTED_PHONE_ENTRY = "selectedPhoneEntry";
 
     //==============================================================================================
     // Attributes
@@ -39,7 +39,7 @@ public class ContactActivity extends ActionBarActivity implements AdapterView.On
     /**
      * The phone number of the selected contact may be null if no contact is selected
      */
-    private String selectedPhoneNumber;
+    private PhoneEntry selectedPhoneEntry;
 
     //==============================================================================================
     // Public
@@ -47,10 +47,10 @@ public class ContactActivity extends ActionBarActivity implements AdapterView.On
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Assertion.initializeStrictMode();
         this.setContentView(R.layout.activity_contact);
         //Load asynchronously the autocompletion list
         ContactAdapter adapter = this.initializeContactAdapter();
-
         this.initializeAutoCompletePhoneNumberView(adapter);
     }
 
@@ -62,7 +62,7 @@ public class ContactActivity extends ActionBarActivity implements AdapterView.On
         this.autoCompletePhoneNumberView.setAdapter(mAdapter);
         this.autoCompletePhoneNumberView.setOnItemClickListener(this);
         this.autoCompletePhoneNumberView.requestFocus();
-        //Listener used for reseting the entire text view if a character is removed
+        //Listener used for resetting the entire text view if a character is removed
         this.autoCompletePhoneNumberView.addTextChangedListener(new TextWatcher() {
             private boolean deleteAll = false;
 
@@ -111,7 +111,8 @@ public class ContactActivity extends ActionBarActivity implements AdapterView.On
 
     private void initializeAdapterContent(final ContactAdapter adapter) {
         Assertion.assertIsNotMainThread();
-        try (Cursor contactCursor = getContentResolver().query(ContactsContract.Contacts.CONTENT_URI, new String[]{ContactsContract.Contacts._ID, ContactsContract.Contacts.DISPLAY_NAME,ContactsContract.Contacts.PHOTO_THUMBNAIL_URI}, null, null, null)) {
+        String[] projection = {ContactsContract.Contacts._ID, ContactsContract.Contacts.DISPLAY_NAME, ContactsContract.Contacts.PHOTO_THUMBNAIL_URI,ContactsContract.Contacts.PHOTO_URI};
+        try (Cursor contactCursor = getContentResolver().query(ContactsContract.Contacts.CONTENT_URI, projection, null, null, null)) {
             while (contactCursor.moveToNext()) {
                 final ArrayList<PhoneEntry> phoneEntries = createPhoneEntriesForContact(contactCursor);
                 if (!phoneEntries.isEmpty()) {
@@ -131,7 +132,8 @@ public class ContactActivity extends ActionBarActivity implements AdapterView.On
         ArrayList<PhoneEntry> phoneEntries = new ArrayList<>();
         String contactName = contactCursor.getString(contactCursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME));
         int contactId = contactCursor.getInt(contactCursor.getColumnIndex(ContactsContract.Contacts._ID));
-        String imageURI = contactCursor.getString(contactCursor.getColumnIndex(ContactsContract.Contacts.PHOTO_THUMBNAIL_URI));
+        String imageThumbnailURI = contactCursor.getString(contactCursor.getColumnIndex(ContactsContract.Contacts.PHOTO_THUMBNAIL_URI));
+        String imageUri = contactCursor.getString(contactCursor.getColumnIndex(ContactsContract.Contacts.PHOTO_URI));
         try (Cursor phones = getContentResolver().query(
                 ContactsContract.CommonDataKinds.Phone.CONTENT_URI, new String[]{ContactsContract.CommonDataKinds.Phone.NUMBER, ContactsContract.CommonDataKinds.Phone.TYPE},
                 ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = ?", new String[]{String.valueOf(contactId)}, null)) {
@@ -139,7 +141,8 @@ public class ContactActivity extends ActionBarActivity implements AdapterView.On
                 String phoneNumber = phones.getString(phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
                 int numberType = phones.getInt(phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.TYPE));
                 CharSequence phoneType = this.getApplicationContext().getResources().getText(ContactsContract.CommonDataKinds.Phone.getTypeLabelResource(numberType));
-                phoneEntries.add(new PhoneEntry(contactName, phoneNumber, phoneType.toString(),imageURI));
+                PhoneEntry object = new PhoneEntry(contactName, phoneNumber, phoneType.toString(), imageThumbnailURI, imageUri);
+                phoneEntries.add(object);
             }
         }
         return phoneEntries;
@@ -155,26 +158,26 @@ public class ContactActivity extends ActionBarActivity implements AdapterView.On
     }
 
     public void onButtonClick(View view) {
-        assert this.selectedPhoneNumber != null;
+        assert this.selectedPhoneEntry != null;
         Intent intent = new Intent(this, SendBubblesActivity.class);
-        intent.putExtra(SendBubblesActivity.EXTRA_CONTACT_NUMBER, this.selectedPhoneNumber);
+        intent.putExtra(SendBubblesActivity.EXTRA_PHONE_ENTRY, this.selectedPhoneEntry);
         this.startActivity(intent);
     }
 
-    private boolean isAContactSelected() {
-        return this.selectedPhoneNumber != null;
+    boolean isAContactSelected() {
+        return this.selectedPhoneEntry != null;
     }
 
-    private void setSelectedContact(PhoneEntry entry) {
+    void setSelectedContact(PhoneEntry entry) {
         this.autoCompletePhoneNumberView.setText(entry.toDisplay());
-        this.selectedPhoneNumber = entry.get(PhoneEntry.CONTACT_PHONE);
+        this.selectedPhoneEntry = entry;
         this.changeButtonStatus(true);
         InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
         imm.hideSoftInputFromWindow(autoCompletePhoneNumberView.getWindowToken(), 0);
     }
 
     private void resetSelectedContact() {
-        this.selectedPhoneNumber = null;
+        this.selectedPhoneEntry = null;
         this.autoCompletePhoneNumberView.clearListSelection();
         this.autoCompletePhoneNumberView.setText("");
         this.changeButtonStatus(false);
@@ -192,15 +195,17 @@ public class ContactActivity extends ActionBarActivity implements AdapterView.On
     @Override
     protected void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putCharSequence(STATE_SELECTED_PHONE_NUMBER, this.selectedPhoneNumber);
-        outState.putCharSequence(STATE_DISPLAYED_TEXT, this.autoCompletePhoneNumberView.getText());
+        outState.putSerializable(STATE_SELECTED_PHONE_ENTRY, this.selectedPhoneEntry);
     }
 
     @Override
     protected void onRestoreInstanceState(@NonNull Bundle savedInstanceState) {
         super.onRestoreInstanceState(savedInstanceState);
-        this.selectedPhoneNumber = String.valueOf(savedInstanceState.getCharSequence(STATE_SELECTED_PHONE_NUMBER));
-        this.autoCompletePhoneNumberView.setText(String.valueOf(savedInstanceState.getCharSequence(STATE_DISPLAYED_TEXT)));
-        this.changeButtonStatus(isAContactSelected());
+        this.selectedPhoneEntry = (PhoneEntry) savedInstanceState.getSerializable(STATE_SELECTED_PHONE_ENTRY);
+        boolean aContactSelected = isAContactSelected();
+        if(aContactSelected){
+            this.autoCompletePhoneNumberView.setText(this.selectedPhoneEntry.toDisplay());
+        }
+        this.changeButtonStatus(aContactSelected);
     }
 }
