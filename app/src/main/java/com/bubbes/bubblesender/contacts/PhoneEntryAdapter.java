@@ -160,6 +160,11 @@ public class PhoneEntryAdapter<T extends PhoneEntry> extends BaseAdapter impleme
 
     private class ContactFilter extends Filter {
         @Override
+        public CharSequence convertResultToString(Object resultValue) {
+            return ((T) resultValue).toDisplay();
+        }
+
+        @Override
         protected FilterResults performFiltering(CharSequence constraint) {
             if (isEmptyFilter(constraint)) {
                 ArrayList<T> phoneEntries;

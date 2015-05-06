@@ -101,6 +101,7 @@ public class ContactActivity extends ActionBarActivity implements AdapterView.On
         this.autoCompletePhoneNumberView.setAdapter(mAdapter);
         this.autoCompletePhoneNumberView.setOnItemClickListener(this);
         this.autoCompletePhoneNumberView.requestFocus();
+        this.autoCompletePhoneNumberView.setThreshold(1);
         //Listener used for resetting the entire text view if a character is removed
         this.autoCompletePhoneNumberView.addTextChangedListener(new TextWatcher() {
             private boolean deleteAll = false;
