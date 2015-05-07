@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Bubble Sender</string>
+    <string name="app_name">Bubble sender</string>
     <string name="action_settings">Settings</string>
     <string name="bt_bubble_them">Send</string>
     <string name="placeholder">placeholder</string>
-    <string name="bubbling">Bubbling...</string>
-    <string name="stop_bubbles">Stop messages</string>
+    <string name="bubbling">Bubbling…</string>
+    <string name="stop_bubbles">Stop bubbles</string>
     <string name="no_messages_sent">0 message sent</string>
-    <string name="hint_search_contact">To...</string>
+    <string name="hint_search_contact">To…</string>
     <string name="contact_image_content_description">Display the contact image</string>
     <string name="no_recent_contact_found">No recent contact found</string>
     <string name="yesterday">Yesterday</string>

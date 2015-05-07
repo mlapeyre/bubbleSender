@@ -78,6 +78,7 @@ public class ContactActivity extends ActionBarActivity implements AdapterView.On
                 if (phoneEntries.isEmpty()) {
                     findViewById(R.id.no_recent_contact_found).setVisibility(View.VISIBLE);
                 } else {
+                    findViewById(R.id.no_recent_contact_found).setVisibility(View.GONE);
                     phoneEntryAdapter.addAll(phoneEntries);
                 }
             }
@@ -88,6 +89,8 @@ public class ContactActivity extends ActionBarActivity implements AdapterView.On
                 return instance.getRecentContacts();
             }
         };
+        findViewById(R.id.loading_recents_progressbar).setVisibility(View.VISIBLE);
+
         //Let's load the contact list asynchronously
         asyncTask.execute();
     }
@@ -100,7 +103,6 @@ public class ContactActivity extends ActionBarActivity implements AdapterView.On
         this.autoCompletePhoneNumberView = (AutoCompleteTextView) findViewById(R.id.auto_complete_text_view);
         this.autoCompletePhoneNumberView.setAdapter(mAdapter);
         this.autoCompletePhoneNumberView.setOnItemClickListener(this);
-        this.autoCompletePhoneNumberView.requestFocus();
         this.autoCompletePhoneNumberView.setThreshold(1);
         //Listener used for resetting the entire text view if a character is removed
         this.autoCompletePhoneNumberView.addTextChangedListener(new TextWatcher() {

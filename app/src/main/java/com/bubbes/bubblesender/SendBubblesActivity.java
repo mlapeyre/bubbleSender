@@ -1,7 +1,6 @@
 package com.bubbes.bubblesender;
 
 
-import android.app.Activity;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -12,6 +11,9 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.support.annotation.NonNull;
+import android.support.v4.app.NavUtils;
+import android.support.v7.app.ActionBarActivity;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -20,7 +22,7 @@ import com.bubbes.bubblesender.executor.BubbleExecutor;
 import com.bubbes.bubblesender.executor.SendSpeed;
 import com.squareup.picasso.Picasso;
 
-public class SendBubblesActivity extends Activity {
+public class SendBubblesActivity extends ActionBarActivity {
     //==============================================================================================
     // Constants
     //==============================================================================================
@@ -53,13 +55,15 @@ public class SendBubblesActivity extends Activity {
     //==============================================================================================
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
         this.handler = new Handler(Looper.getMainLooper());
         this.sendMessageReceiver = new SendMessageReceiver();
 
         super.onCreate(savedInstanceState);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         setContentView(R.layout.send_bubble_activity);
         findViewById(R.id.bt_stop_bubbles).getBackground().
-                setColorFilter(0xFFFF0000, PorterDuff.Mode.MULTIPLY);
+                setColorFilter(this.getResources().getColor(R.color.actionbar_background), PorterDuff.Mode.MULTIPLY);
 
         PhoneEntry phoneEntry = (PhoneEntry) this.getIntent().getSerializableExtra(EXTRA_PHONE_ENTRY);
         ((TextView) findViewById(R.id.contact_name)).setText(phoneEntry.getName());
@@ -79,6 +83,16 @@ public class SendBubblesActivity extends Activity {
         super.onStop();
         this.unregisterReceiver(this.sendMessageReceiver);
         this.executor.stop();
+    }
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            // Respond to the action bar's Up/Home button
+            case android.R.id.home:
+                NavUtils.navigateUpFromSameTask(this);
+                return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     //==============================================================================================
@@ -124,6 +138,4 @@ public class SendBubblesActivity extends Activity {
         TextView viewById = (TextView) findViewById(R.id.nb_bubbles_sent);
         viewById.setText(this.nbMessageSent+" messages sent");
     }
-
-
 }

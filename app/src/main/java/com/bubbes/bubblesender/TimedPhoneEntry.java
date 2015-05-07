@@ -24,5 +24,4 @@ public class TimedPhoneEntry extends PhoneEntry {
     public long getTime() {
         return time;
     }
-
 }
