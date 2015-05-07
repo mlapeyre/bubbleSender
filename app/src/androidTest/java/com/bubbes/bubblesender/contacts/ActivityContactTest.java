@@ -2,14 +2,11 @@ package com.bubbes.bubblesender.contacts;
 
 import android.test.ActivityInstrumentationTestCase2;
 import android.test.UiThreadTest;
-import android.view.KeyEvent;
 import android.view.View;
 import android.widget.AutoCompleteTextView;
 
 import com.bubbes.bubblesender.PhoneEntry;
 import com.bubbes.bubblesender.R;
-
-import java.util.concurrent.atomic.AtomicBoolean;
 
 
 public class ActivityContactTest extends ActivityInstrumentationTestCase2<ContactActivity> {
@@ -52,49 +49,49 @@ public class ActivityContactTest extends ActivityInstrumentationTestCase2<Contac
         assertTrue(this.getActivity().isAContactSelected());
     }
 
-    @UiThreadTest
-    public void testRemoveACharacter() throws Throwable {
-        final AutoCompleteTextView textView = (AutoCompleteTextView) contactActivity.findViewById(R.id.auto_complete_text_view);
-        //jdk 8 would be nice...
-        // contactActivity.setSelectedContact(new PhoneEntry("martin", "0553670000", "Mobile", "uri1", "uri2"));
-        assertTrue(textView.requestFocus());
-        Runnable runnable = new Runnable() {
-            @Override
-
-            public void run() {
-                getInstrumentation().sendKeyDownUpSync(KeyEvent.KEYCODE_MOVE_END);
-                getInstrumentation().sendKeyDownUpSync(KeyEvent.KEYCODE_DEL);
-            }
-        };
-        this.runSynchronouslyInDifferentThread(runnable);
-        assertFalse(this.contactActivity.isAContactSelected());
-        assertEquals("", textView.getText().toString());
-    }
+//    @UiThreadTest
+//    public void testRemoveACharacter() throws Throwable {
+//        final AutoCompleteTextView textView = (AutoCompleteTextView) contactActivity.findViewById(R.id.auto_complete_text_view);
+//        //jdk 8 would be nice...
+//        // contactActivity.setSelectedContact(new PhoneEntry("martin", "0553670000", "Mobile", "uri1", "uri2"));
+//        assertTrue(textView.requestFocus());
+//        Runnable runnable = new Runnable() {
+//            @Override
+//
+//            public void run() {
+//                getInstrumentation().sendKeyDownUpSync(KeyEvent.KEYCODE_MOVE_END);
+//                getInstrumentation().sendKeyDownUpSync(KeyEvent.KEYCODE_DEL);
+//            }
+//        };
+//        this.runSynchronouslyInDifferentThread(runnable);
+//        assertFalse(this.contactActivity.isAContactSelected());
+//        assertEquals("", textView.getText().toString());
+//    }
 
     //==============================================================================================
     // Private
     //==============================================================================================
 
-    private void runSynchronouslyInDifferentThread(final Runnable runnable) throws InterruptedException {
-        final Object MUTEX = new Object();
-        final AtomicBoolean done = new AtomicBoolean(false);
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                runnable.run();
-                synchronized (MUTEX) {
-                    MUTEX.notifyAll();
-                    done.set(true);
-                }
-            }
-        }).start();
-        synchronized (MUTEX) {
-            if (!done.get()) {
-                MUTEX.wait(1000);
-                if (!done.get()) {
-                    throw new RuntimeException("aie");
-                }
-            }
-        }
-    }
+//    private void runSynchronouslyInDifferentThread(final Runnable runnable) throws InterruptedException {
+//        final Object MUTEX = new Object();
+//        final AtomicBoolean done = new AtomicBoolean(false);
+//        new Thread(new Runnable() {
+//            @Override
+//            public void run() {
+//                runnable.run();
+//                synchronized (MUTEX) {
+//                    MUTEX.notifyAll();
+//                    done.set(true);
+//                }
+//            }
+//        }).start();
+//        synchronized (MUTEX) {
+//            if (!done.get()) {
+//                MUTEX.wait(1000);
+//                if (!done.get()) {
+//                    throw new RuntimeException("aie");
+//                }
+//            }
+//        }
+//    }
 }
