@@ -1,1 +1,13 @@
 language: android
+android:
+   components:
+   - platform-tools
+   - android-22
+   - build-tools-22.0.0
+   - extra
+
+jdk: oraclejdk7
+
+notifications:
+  email: false
+
