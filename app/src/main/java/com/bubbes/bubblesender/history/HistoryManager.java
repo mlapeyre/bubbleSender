@@ -109,11 +109,18 @@ public class HistoryManager {
 
     public List<TimedPhoneEntry> getRecentContacts() {
         Assertion.assertIsNotMainThread();
-        synchronized (recentContacts) {
+        synchronized (this.recentContacts) {
             return new ArrayList<>(this.recentContacts);
         }
     }
 
+    public void clear() {
+        Assertion.assertIsNotMainThread();
+        synchronized (this.recentContacts) {
+            this.recentContacts.clear();
+            this.sharedPreferences.edit().clear().apply();
+        }
+    }
 
     //==============================================================================================
     // Private
@@ -139,10 +146,5 @@ public class HistoryManager {
     }
 
 
-    public void clear() {
-        synchronized (this.recentContacts) {
-            this.recentContacts.clear();
-            this.sharedPreferences.edit().clear().apply();
-        }
-    }
+
 }

@@ -63,7 +63,7 @@ public class SendBubblesActivity extends ActionBarActivity {
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         setContentView(R.layout.send_bubble_activity);
         findViewById(R.id.bt_stop_bubbles).getBackground().
-                setColorFilter(this.getResources().getColor(R.color.actionbar_background), PorterDuff.Mode.MULTIPLY);
+                setColorFilter(this.getResources().getColor(R.color.button_stop_background), PorterDuff.Mode.MULTIPLY);
 
         PhoneEntry phoneEntry = (PhoneEntry) this.getIntent().getSerializableExtra(EXTRA_PHONE_ENTRY);
         ((TextView) findViewById(R.id.contact_name)).setText(phoneEntry.getName());
@@ -136,6 +136,6 @@ public class SendBubblesActivity extends ActionBarActivity {
     private void updateMessageCount(int newCount) {
         this.nbMessageSent = newCount;
         TextView viewById = (TextView) findViewById(R.id.nb_bubbles_sent);
-        viewById.setText(this.nbMessageSent+" messages sent");
+        viewById.setText(this.nbMessageSent+" messages sent"); //TODO i18n
     }
 }

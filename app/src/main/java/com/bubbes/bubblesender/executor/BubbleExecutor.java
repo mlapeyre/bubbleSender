@@ -48,7 +48,7 @@ public class BubbleExecutor {
         @Override
         public void run() {
                 SmsManager smsManager = SmsManager.getDefault();
-//                smsManager.sendTextMessage(phoneEntry.getPhone(), null, " ", sentMessagesReceiver, null);
+                smsManager.sendTextMessage(phoneEntry.getPhone(), null, " ", sentMessagesReceiver, null);
                 final HistoryManager instance = HistoryManager.getInstance(context);
                 instance.notifySender(new TimedPhoneEntry(phoneEntry,System.currentTimeMillis()));
         }

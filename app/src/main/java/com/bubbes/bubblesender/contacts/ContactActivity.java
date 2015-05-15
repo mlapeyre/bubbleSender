@@ -1,5 +1,6 @@
 package com.bubbes.bubblesender.contacts;
 
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
@@ -10,6 +11,9 @@ import android.support.annotation.NonNull;
 import android.support.v7.app.ActionBarActivity;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
@@ -58,6 +62,7 @@ public class ContactActivity extends ActionBarActivity implements AdapterView.On
         this.initializeAutoCompletePhoneNumberView(adapter);
         this.initializeLastVictimList();
     }
+
 
     private void initializeLastVictimList() {
         ListView listView = (ListView) this.findViewById(R.id.victim_list);
@@ -133,12 +138,12 @@ public class ContactActivity extends ActionBarActivity implements AdapterView.On
     private PhoneEntryAdapter initializeContactAdapter() {
         Assertion.assertIsMainThread();
         ArrayList<PhoneEntry> contactList = new ArrayList<>();
-        PhoneEntryAdapter adapter = new PhoneEntryAdapter(this, R.layout.phone_entry_view, contactList);
+        PhoneEntryAdapter<PhoneEntry> adapter = new PhoneEntryAdapter<>(this, R.layout.phone_entry_view, contactList);
         initializeBackGroundContactLoading(adapter);
         return adapter;
     }
 
-    private void initializeBackGroundContactLoading(final PhoneEntryAdapter adapter) {
+    private void initializeBackGroundContactLoading(final PhoneEntryAdapter<PhoneEntry> adapter) {
         Assertion.assertIsMainThread();
         AsyncTask<Object, Void, List<PhoneEntry>> asyncTask = new AsyncTask<Object, Void, List<PhoneEntry>>() {
             @Override
@@ -202,6 +207,49 @@ public class ContactActivity extends ActionBarActivity implements AdapterView.On
     public void onButtonClick(View view) {
         assert this.selectedPhoneEntry != null;
         this.goToSendBubbleActivity(this.selectedPhoneEntry);
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.menu_contact, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle item selection
+        switch (item.getItemId()) {
+            case R.id.action_clear_history:
+                final ProgressDialog progressDialog = new ProgressDialog(ContactActivity.this);
+
+                AsyncTask<Void, Void, Void> asyncTask = new AsyncTask<Void, Void, Void>() {
+                    @Override
+                    protected void onPreExecute() {
+                        progressDialog.setMessage("Clearing history");
+                        progressDialog.setIndeterminate(true);
+                        progressDialog.setCancelable(false);
+                        progressDialog.show();
+                    }
+
+                    @Override
+                    protected Void doInBackground(Void[] params) {
+                        HistoryManager historyManager = HistoryManager.getInstance(ContactActivity.this);
+                        historyManager.clear();
+                        return null;
+                    }
+
+                    @Override
+                    protected void onPostExecute(Void aVoid) {
+                        progressDialog.dismiss();
+                        initializeLastVictimList();
+                    }
+                };
+                asyncTask.execute();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
     }
 
     boolean isAContactSelected() {
